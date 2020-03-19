@@ -51,6 +51,7 @@ class Post
     public function __construct()
     {
         $this->comments = new ArrayCollection();
+        $this->createdAt = $this->updatedAt = new \DateTime();
     }
 
     public function getId(): int
@@ -143,5 +144,7 @@ class Post
     public function setUpdatedAt(\DateTime $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
+
+        return $this;
     }
 }

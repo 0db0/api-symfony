@@ -10,8 +10,8 @@ class PostFixtures extends AbstractBaseFixtures implements DependentFixtureInter
 {
     protected function loadData()
     {
-        $this->createMany(Post::class, 50, function (Post $post) {
-           $post->setAuthor($this->getReference(User::class.'_'.rand(0, 9)));
+        $this->createMany(Post::class, self::POST_COUNT, function (Post $post) {
+           $post->setAuthor($this->getReference(User::class.'_'.rand(0, self::USER_COUNT - 1)));
            $post->setTitle($this->faker->sentence);
            $post->setText($this->faker->text);
            $datetime = $this->faker->dateTimeThisYear()->format('Y-m-d H:i:s');

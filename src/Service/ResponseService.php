@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Post;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -56,14 +57,51 @@ class ResponseService
 
     private function prepareResponseFromObject(object $data): array
     {
+        if ($data instanceof User) {
+            return $this->createResponseForUser($data);
+        }
 
+        if ($data instanceof Post) {
+            return $this->createResponseForPost($data);
+        }
+
+
+    }
+
+//    private function prepareResponseFromCollection(array $data): array
+//    {
+//        return $this->pagination->paginate($data);
+//
+//    }
+
+    private function prepareResponseFromCollection (array $list): array
+    {
+        $response = [
+            "ok" => "true",
+            'items' => [],
+            ];
+        foreach ($list as $item) {
+            array_push($response['items'], $item->getId());
+//            $response['items'][] = [
+//                'id' => $item->getId(),
+//                'title' => $post->getTitle(),
+//                'text' => $post->getText(),
+//                'createdAt' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+//            ];
+        }
+
+        return $response;
+    }
+
+    private function createResponseForUser(User $user)
+    {
         $response = [
             'ok' => 'true',
             'user' => [
-                'id'        => $data->getId(),
-                'firstName' => $data->getFirstName(),
-                'lastName'  => $data->getLastName(),
-                'email'     => $data->getEmail(),
+                'id'        => $user->getId(),
+                'firstName' => $user->getFirstName(),
+                'lastName'  => $user->getLastName(),
+                'email'     => $user->getEmail(),
             ],
             "_links" => [
                 'self' => [
@@ -73,19 +111,38 @@ class ResponseService
         ];
 
         if ($this->requestService->getMethod() === 'POST') {
-            $response['_links']['self']['href'] = $this->requestService->getBaseUrl() . '/' . $data->getId();
+            $response['_links']['self']['href'] = $this->requestService->getBaseUrl() . '/' . $user->getId();
         }
 
         return $response;
     }
 
-    private function prepareResponseFromCollection(array $data): array
+    private function createResponseForPost(Post $post)
     {
-        $response = $this->pagination->paginate($data);
+        $response = [
+            'ok' => 'true',
+            'posts' => [
+                'id' => $post->getId(),
+                'title' => $post->getTitle(),
+                'text' => $post->getText(),
+                'author' => $post->getAuthor()->getId(),
+            ],
+            "_links" => [
+                'self' => [
+                    'href' => $this->requestService->getBaseUrl(),
+                ],
+            ],
+        ];
+
+        if ($this->requestService->getMethod() === 'POST') {
+            $response['_links']['self']['href'] = $this->requestService->getBaseUrl() . '/' . $post->getId();
+        }
 
         return $response;
     }
 }
+
+
 
 
 

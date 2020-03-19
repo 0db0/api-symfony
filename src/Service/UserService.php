@@ -41,7 +41,7 @@ class UserService
         }
 
         return $this->repository
-                  ->findUsersByRange(($offset-1) * PaginationService::LIMIT_USER, $offset * PaginationService::LIMIT_USER);
+                  ->findUsersByRange(($offset - 1) * PaginationService::LIMIT_USER, $offset * PaginationService::LIMIT_USER);
     }
 
     public function findUserById(int $id): User

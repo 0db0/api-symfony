@@ -10,7 +10,7 @@ class UserFixtures extends AbstractBaseFixtures
 
     protected function loadData()
     {
-        $this->createMany(User::class, 25, function (User $user) {
+        $this->createMany(User::class, self::USER_COUNT, function (User $user) {
             $user->setFirstName($this->faker->firstName());
             $user->setLastName($this->faker->lastName);
             $user->setEmail($this->faker->email);

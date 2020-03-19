@@ -8,6 +8,10 @@ use Faker\Factory;
 
 abstract class AbstractBaseFixtures extends Fixture
 {
+    protected const USER_COUNT = 500;
+    protected const POST_COUNT = 5000;
+    protected const COMMENT_COUNT = 50000;
+
     /** @var ObjectManager */
     protected $manager;
 

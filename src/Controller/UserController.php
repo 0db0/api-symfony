@@ -41,9 +41,7 @@ class UserController extends AbstractController
     {
         $user = $this->userService->findUserById($id);
 
-        $response = $this->responseService->buildResponse($user, 200);
-
-        return $response;
+        return $this->responseService->buildResponse($user, 200);
     }
 
     /**
@@ -57,9 +55,7 @@ class UserController extends AbstractController
 
         $this->save($user);
 
-        $response = $this->responseService->buildResponse($user, 201);
-
-        return $response;
+        return $this->responseService->buildResponse($user, 201);
     }
 // todo: Реализовать PostController через Dto object + use Redis for highload
     private function save(User $user): void

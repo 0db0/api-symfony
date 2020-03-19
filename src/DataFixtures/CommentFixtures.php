@@ -11,12 +11,12 @@ class CommentFixtures extends AbstractBaseFixtures implements DependentFixtureIn
 {
     protected function loadData()
     {
-        $this->createMany(Comment::class, 100, function (Comment $comment) {
+        $this->createMany(Comment::class, self::COMMENT_COUNT, function (Comment $comment) {
             $comment->setMessage($this->faker->text(140));
             $datetime = $this->faker->dateTimeThisYear()->format('Y-m-d H:i:s');
             $comment->setCreatedAt(new \DateTime($datetime));
-            $comment->setAuthor($this->getReference(User::class.'_'.rand(0, 24)));
-            $comment->setPost($this->getReference(Post::class.'_'.rand(0, 49)));
+            $comment->setAuthor($this->getReference(User::class.'_'.rand(0, self::USER_COUNT - 1)));
+            $comment->setPost($this->getReference(Post::class.'_'.rand(0, self::POST_COUNT - 1)));
         });
     }
 

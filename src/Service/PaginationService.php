@@ -42,6 +42,22 @@ class PaginationService
         return $data;
     }
 
+    public function prepareItemListForJson($itemList)
+    {
+        $data = ['ok' => 'true'];
+
+        foreach ($itemList as $item) {
+            $data['items'][] = [
+                'id'        => $item->getId(),
+                'title'     => $item->getTitle(),
+                'text'      => $item->getText(),
+                'createdAt' => $item->getCreatedAt(),
+            ];
+        }
+
+        return $data;
+    }
+
     public function paginate(array $userList)
     {
         $data = $this->prepareUserListForJson($userList);
