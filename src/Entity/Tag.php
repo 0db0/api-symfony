@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -21,6 +22,16 @@ class Tag
      */
     private $title;
 
+    /**
+     * @@ORM\ManyToMany(targetEntity="App\Entity\Post", mappedBy="tags")
+     */
+    private $post;
+
+    public function __construct()
+    {
+        $this->post = new ArrayCollection();
+    }
+
     public function getId(): int
     {
         return $this->id;
@@ -34,6 +45,13 @@ class Tag
     public function setTitle(string $title): self
     {
         $this->title = $title;
+
+        return $this;
+    }
+
+    public function addPost(Post $post): self
+    {
+        $this->post->add($post);
 
         return $this;
     }

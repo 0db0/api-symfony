@@ -38,6 +38,12 @@ class Post
      * @ORM\OneToMany(targetEntity="App\Entity\Comment", mappedBy="post")
      */
     private $comments;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="App\Entity\Tag", inversedBy="post")
+     */
+    private $tags;
+
     /**
      * @ORM\Column(type="datetime")
      */
@@ -51,6 +57,7 @@ class Post
     public function __construct()
     {
         $this->comments = new ArrayCollection();
+        $this->tags = new ArrayCollection();
         $this->createdAt = $this->updatedAt = new \DateTime();
     }
 
@@ -118,6 +125,23 @@ class Post
             if ($comment->getPost() === $this) {
                 $comment->setPost(null);
             }
+        }
+
+        return $this;
+    }
+
+    public function addTags(Tag $tag): self
+    {
+        $tag->addPost($this);
+        $this->tags->add($tag);
+
+        return $this;
+    }
+
+    public function removeTag(Tag $tag): self
+    {
+        if ($this->tags->contains($tag)) {
+            $this->tags->removeElement($tag);
         }
 
         return $this;
