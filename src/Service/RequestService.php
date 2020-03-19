@@ -71,6 +71,10 @@ class RequestService
             $params['limit'] = self::PARAMETER_LIMIT_DEFAULT_VALUE;
         }
 
+        if (in_array('tags', $keys)) {
+            $params['tags'] = $this->requestStack->getCurrentRequest()->query->get('tags');
+        }
+
         return $params;
     }
 

@@ -5,7 +5,7 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
+use Doctrine\ORM\PersistentCollection;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PostRepository")
@@ -130,10 +130,18 @@ class Post
         return $this;
     }
 
+    /**
+     * @return Tag[]|PersistentCollection
+     */
+    public function getTags(): PersistentCollection
+    {
+        return $this->tags;
+    }
+
     public function addTags(Tag $tag): self
     {
-        $tag->addPost($this);
         $this->tags->add($tag);
+        $tag->addPost($this);
 
         return $this;
     }

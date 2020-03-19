@@ -13,5 +13,12 @@ class TagRepository extends ServiceEntityRepository
         parent::__construct($registry, Tag::class);
     }
 
-
+    public function findPostByTags()
+    {
+        return $this->createQueryBuilder('t')
+            ->select('t.post')
+            ->where('t.title = :title')
+            ->getQuery()
+            ->execute();
+    }
 }

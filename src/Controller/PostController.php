@@ -28,13 +28,14 @@ class PostController extends AbstractController
     }
 
 //    todo: реализовать поиск с пмощью оффсетов(queryString). json {"ok": "true", "count": "countOfPosts", "items"["id", "id", "id", "id"]}
+//      Реализовать 2 способа поиска по тегам: через GET-параметр в PostController`e и через собственный TagController
     /**
      * @Route("/api/posts", name="posts_list", methods={"GET"})
      */
     public function list()
     {
         $params = $this->requestService->getParameters();
-        $posts = $this->postService->getPosts($params['limit'], $params['offset']);
+        $posts = $this->postService->getPosts($params['limit'], $params['offset'], $params['tags']);
 
         return $this->responseService->buildResponse($posts, 200);
     }
@@ -46,6 +47,7 @@ class PostController extends AbstractController
     {
         $post = $this->postService->findPost($id);
 
+var_dump($post->getTags()->toArray());die;
         return $this->responseService->buildResponse($post, 200);
     }
 

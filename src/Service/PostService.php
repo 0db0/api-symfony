@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Post;
 use App\Entity\User;
 use App\Repository\PostRepository;
+use App\Repository\TagRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Predis\Client;
@@ -28,16 +29,28 @@ class PostService
     /** @var UserRepository  */
     private $userRepository;
 
-    public function __construct(PostRepository $repository, EntityManagerInterface $em, UserRepository $userRepository)
+    /** @var TagRepository  */
+    private $tagRepository;
+
+    public function __construct(PostRepository $repository,
+                                EntityManagerInterface $em,
+                                UserRepository $userRepository,
+                                TagRepository $tagRepository
+    )
     {
         $this->repository = $repository;
         $this->cache = new RedisAdapter(new Client());
         $this->em = $em;
         $this->userRepository = $userRepository;
+        $this->tagRepository = $tagRepository;
     }
 
-    public function getPosts(int $limit, int $offset): array
+    public function getPosts(int $limit, int $offset, string $tags): array
     {
+        if ($tags) {
+            return $this->tagRepository->findPostByTags($tags);
+        }
+
         $key = sprintf(
             'posts_list_%d_%d',
                     $offset,

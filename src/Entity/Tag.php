@@ -18,7 +18,7 @@ class Tag
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=50)
+     * @ORM\Column(type="string", length=50, unique=true)
      */
     private $title;
 
@@ -51,8 +51,10 @@ class Tag
 
     public function addPost(Post $post): self
     {
-        $this->post->add($post);
-
+        if ($this->post) {
+            $this->post->add($post);
+        }
+//        $post->addTags($this);
         return $this;
     }
 }

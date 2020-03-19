@@ -18,6 +18,8 @@ class CommentFixtures extends AbstractBaseFixtures implements DependentFixtureIn
             $comment->setAuthor($this->getReference(User::class.'_'.rand(0, self::USER_COUNT - 1)));
             $comment->setPost($this->getReference(Post::class.'_'.rand(0, self::POST_COUNT - 1)));
         });
+
+        $this->manager->flush();
     }
 
     /**
