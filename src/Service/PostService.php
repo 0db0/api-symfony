@@ -4,9 +4,12 @@ namespace App\Service;
 
 use App\Entity\Post;
 use App\Entity\User;
+use App\Exception\ItemNotFoundException;
 use App\Repository\PostRepository;
 use App\Repository\TagRepository;
 use App\Repository\UserRepository;
+use Doctrine\DBAL\Driver\DriverException;
+use Doctrine\DBAL\Exception\DatabaseObjectNotFoundException;
 use Doctrine\ORM\EntityManagerInterface;
 use Predis\Client;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
@@ -38,17 +41,29 @@ class PostService
                                 TagRepository $tagRepository
     )
     {
-        $this->repository = $repository;
-        $this->cache = new RedisAdapter(new Client());
-        $this->em = $em;
+        $this->repository     = $repository;
+        $this->cache          = new RedisAdapter(new Client());
+        $this->em             = $em;
         $this->userRepository = $userRepository;
-        $this->tagRepository = $tagRepository;
+        $this->tagRepository  = $tagRepository;
     }
 
-    public function getPosts(int $limit, int $offset, string $tags): array
+    /**
+     * @param array $params
+     * @return array| Post[]
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function getPosts(array $params): array
     {
-        if ($tags) {
-            return $this->tagRepository->findPostByTags($tags);
+        list(
+            'limit' =>$limit,
+            'offset' => $offset,
+            'tags' => $tags
+            ) = $params;
+
+        if (!empty($tags)) {
+            return $this->repository->findPostsByTags($tags);
+//            return $this->tagRepository->findPostByTags($tags);
         }
 
         $key = sprintf(
@@ -67,9 +82,10 @@ class PostService
         return unserialize($posts);
     }
 
-    public function findPost(int $id): Post
+    public function getPost(int $id): ?Post
     {
         return $this->repository->findOneBy(['id' => $id]);
+
     }
 
     public function createNewPost($item): Post
@@ -79,12 +95,13 @@ class PostService
         $post->setText($item->text);
         $user = $this->getUserById($item->author);
         $post->setAuthor($user);
+
         $this->save($post);
 
         return $post;
     }
 
-    public function editPost(Post $post, Request $request)
+    public function editPost(Post $post, Request $request): Post
     {
         $content = json_decode($request->getContent());
 
@@ -109,12 +126,20 @@ class PostService
         $this->em->flush();
     }
 
-    private function getUserById(int $id): User
+    public function sendNotificationForFollowers(Post $post)
+    {
+        $followers = $post->getAuthor()->getFollowers();
+        $this->prepareNotification($post);
+
+        $emailService->send($post, $followers);
+    }
+
+    private function getUserById(int $id): ?User
     {
         return $this->userRepository->findOneBy(['id' => $id]);
     }
 
-    private function save(Post $post)
+    private function save(Post $post): void
     {
         $this->em->persist($post);
         $this->em->flush();

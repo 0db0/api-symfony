@@ -27,15 +27,13 @@ class PostController extends AbstractController
         $this->responseService = $responseService;
     }
 
-//    todo: реализовать поиск с пмощью оффсетов(queryString). json {"ok": "true", "count": "countOfPosts", "items"["id", "id", "id", "id"]}
-//      Реализовать 2 способа поиска по тегам: через GET-параметр в PostController`e и через собственный TagController
     /**
      * @Route("/api/posts", name="posts_list", methods={"GET"})
      */
     public function list()
     {
         $params = $this->requestService->getParameters();
-        $posts = $this->postService->getPosts($params['limit'], $params['offset'], $params['tags']);
+        $posts = $this->postService->getPosts($params);
 
         return $this->responseService->buildResponse($posts, 200);
     }
@@ -45,9 +43,8 @@ class PostController extends AbstractController
      */
     public function show(int $id)
     {
-        $post = $this->postService->findPost($id);
+        $post = $this->postService->getPost($id);
 
-var_dump($post->getTags()->toArray());die;
         return $this->responseService->buildResponse($post, 200);
     }
 
@@ -58,6 +55,8 @@ var_dump($post->getTags()->toArray());die;
     {
         $data = $this->requestService->getContent();
         $post = $this->postService->createNewPost($data);
+
+        $this->postService->sendNotificationForFollowers($post);
 
         return $this->responseService->buildResponse($post, 201);
     }

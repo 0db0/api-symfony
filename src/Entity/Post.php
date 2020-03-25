@@ -25,7 +25,7 @@ class Post
     private $author;
 
     /**
-     * @ORM\Column(type="string", length=140)
+     * @ORM\Column(type="string", length=140, unique=true)
      */
     private $title;
 
@@ -131,17 +131,18 @@ class Post
     }
 
     /**
-     * @return Tag[]|PersistentCollection
+     * @return Collection| Tag[]
      */
-    public function getTags(): PersistentCollection
+    public function getTags(): Collection
     {
         return $this->tags;
     }
 
     public function addTags(Tag $tag): self
     {
-        $this->tags->add($tag);
-        $tag->addPost($this);
+        if (!$this->tags->contains($tag)) {
+            $this->tags[] = $tag;
+        }
 
         return $this;
     }

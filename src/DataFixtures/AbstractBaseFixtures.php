@@ -11,7 +11,7 @@ abstract class AbstractBaseFixtures extends Fixture
     protected const USER_COUNT = 500;
     protected const POST_COUNT = 5000;
     protected const COMMENT_COUNT = 50000;
-    protected const TAG_COUNT = 100;
+    protected const TAG_COUNT = 150;
 
     /** @var ObjectManager */
     protected $manager;
