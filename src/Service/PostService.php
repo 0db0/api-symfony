@@ -8,8 +8,6 @@ use App\Exception\ItemNotFoundException;
 use App\Repository\PostRepository;
 use App\Repository\TagRepository;
 use App\Repository\UserRepository;
-use Doctrine\DBAL\Driver\DriverException;
-use Doctrine\DBAL\Exception\DatabaseObjectNotFoundException;
 use Doctrine\ORM\EntityManagerInterface;
 use Predis\Client;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
@@ -34,11 +32,14 @@ class PostService
 
     /** @var TagRepository  */
     private $tagRepository;
+    /** @var EmailService  */
+    private $emailService;
 
     public function __construct(PostRepository $repository,
                                 EntityManagerInterface $em,
                                 UserRepository $userRepository,
-                                TagRepository $tagRepository
+                                TagRepository $tagRepository,
+                                EmailService $emailService
     )
     {
         $this->repository     = $repository;
@@ -46,6 +47,7 @@ class PostService
         $this->em             = $em;
         $this->userRepository = $userRepository;
         $this->tagRepository  = $tagRepository;
+        $this->emailService = $emailService;
     }
 
     /**
@@ -98,6 +100,8 @@ class PostService
 
         $this->save($post);
 
+//        $this->sendNotificationForFollowers($post);
+
         return $post;
     }
 
@@ -129,9 +133,8 @@ class PostService
     public function sendNotificationForFollowers(Post $post)
     {
         $followers = $post->getAuthor()->getFollowers();
-        $this->prepareNotification($post);
 
-        $emailService->send($post, $followers);
+        $this->emailService->saveEmail($post, $followers);
     }
 
     private function getUserById(int $id): ?User

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Service\PostService;
 use App\Service\RequestService;
 use App\Service\ResponseService;
@@ -56,7 +57,9 @@ class PostController extends AbstractController
         $data = $this->requestService->getContent();
         $post = $this->postService->createNewPost($data);
 
-        $this->postService->sendNotificationForFollowers($post);
+        if ($post) {
+            $this->postService->sendNotificationForFollowers($post);
+        }
 
         return $this->responseService->buildResponse($post, 201);
     }

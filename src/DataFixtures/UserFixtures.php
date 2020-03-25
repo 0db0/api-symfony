@@ -15,6 +15,7 @@ class UserFixtures extends AbstractBaseFixtures
             $user->setLastName($this->faker->lastName);
             $user->setEmail($this->faker->email);
             $user->setPassword(self::PLAIN_PASSWORD);
+//            $user->addFollower($this->getReference(User::class.'_'.rand(0, self::USER_COUNT)));
         });
 
         $this->manager->flush();
