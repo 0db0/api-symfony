@@ -54,7 +54,7 @@ class NotifyCommand extends Command
             $email = $this->redis->get($key, function (){});
             $email = unserialize($email);
             $this->emailService->sendEmail($email);
-            report->changeStatus($status);
+//            report->changeStatus($status);
             $this->redis->delete($key);
 
         }

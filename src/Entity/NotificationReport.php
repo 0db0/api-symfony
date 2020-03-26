@@ -25,9 +25,9 @@ class NotificationReport
     private $sender;
 
     /**
-     * @ORM\Column(type="object")
+     * @ORM\Column(type="integer")
      */
-    private $recipient;
+    private $recipientId;
 
     /**
      * @ORM\Column(type="string", length=15)
@@ -37,7 +37,7 @@ class NotificationReport
     public function __construct(User $sender, User $recipient)
     {
         $this->sender = $sender;
-        $this->recipient = $recipient;
+        $this->recipientId = $recipient->getId();
         $this->status = self::NOTIFICATION_STATUS_PENDING;
     }
 
@@ -58,14 +58,14 @@ class NotificationReport
         return $this;
     }
 
-    public function getRecipient(): ?User
+    public function getRecipient(): int
     {
-        return $this->recipient;
+        return $this->recipientId;
     }
 
     public function setRecipient(User $recipient): self
     {
-        $this->recipient = $recipient;
+        $this->recipientId = $recipient->getId();
 
         return $this;
     }
