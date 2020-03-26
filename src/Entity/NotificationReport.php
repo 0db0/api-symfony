@@ -34,11 +34,17 @@ class NotificationReport
      */
     private $status;
 
+    /**
+     * @ORM\Column(type="datetime")
+     */
+    private $createdAt;
+
     public function __construct(User $sender, User $recipient)
     {
         $this->sender = $sender;
         $this->recipientId = $recipient->getId();
         $this->status = self::NOTIFICATION_STATUS_PENDING;
+        $this->createdAt = new \DateTime();
     }
 
     public function getId(): int

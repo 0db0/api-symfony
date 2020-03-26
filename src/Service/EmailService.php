@@ -16,12 +16,17 @@ class EmailService
     /** @var MailerInterface  */
     private $mailer;
 
+    /** @var RedisAdapter  */
     private $redisService;
 
-    public function __construct(MailerInterface $mailer)
+    /** @var NotificationReportService  */
+    private $notificationReportService;
+
+    public function __construct(MailerInterface $mailer, NotificationReportService $notificationReportService)
     {
         $this->mailer = $mailer;
         $this->redisService = new RedisAdapter(new Client());
+        $this->notificationReportService = $notificationReportService;
     }
 
     public function saveEmail(Post $post, $followers): bool
@@ -44,9 +49,7 @@ class EmailService
                 return serialize($email);
             });
 
-            $notification = new NotificationReport($post->getAuthor(), $follower);
-            $em->persist($notification);
-            $em->flush();
+            $this->notificationReportService->persist($post->getAuthor(), $follower);
         }
 
         return true;
@@ -54,6 +57,7 @@ class EmailService
 
     public function sendEmail(Email $email)
     {
-        $this->mailer->send($email);
+        echo 'Email was send!'."\n";
+//        $this->mailer->send($email);
     }
 }

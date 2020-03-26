@@ -3,6 +3,7 @@
 namespace App\Command;
 
 use App\Service\EmailService;
+use App\Service\NotificationReportService;
 use App\Service\UserService;
 use Predis\Client;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
@@ -25,11 +26,19 @@ class NotifyCommand extends Command
     /** @var EmailService  */
     private $emailService;
 
-    public function __construct(string $name = null, UserService $userService, EmailService $emailService)
+    /** @var NotificationReportService  */
+    private $notificationReportService;
+
+    public function __construct(string $name = null,
+                                UserService $userService,
+                                EmailService $emailService,
+                                NotificationReportService $notificationReportService
+    )
     {
         $this->userService = $userService;
         $this->redis = new RedisAdapter(new Client());
         $this->emailService = $emailService;
+        $this->notificationReportService = $notificationReportService;
 
         parent::__construct($name);
     }
@@ -54,9 +63,11 @@ class NotifyCommand extends Command
             $email = $this->redis->get($key, function (){});
             $email = unserialize($email);
             $this->emailService->sendEmail($email);
-//            report->changeStatus($status);
-            $this->redis->delete($key);
 
+            $report = $this->notificationReportService->getNotificationReport($user, $follower);
+            $this->notificationReportService->performed($report);
+
+            $this->redis->delete($key);
         }
 
         $output->writeln(sprintf('Email from %s to all followers has been send', $user->getFullName()));
