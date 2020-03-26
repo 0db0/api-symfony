@@ -58,12 +58,18 @@ class User
      */
     private $following;
 
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\NotificationReport", mappedBy="sender")
+     */
+    private $notificationReports;
+
     public function __construct()
     {
         $this->posts = new ArrayCollection();
         $this->comments = new ArrayCollection();
         $this->followers = new ArrayCollection();
         $this->following = new ArrayCollection();
+        $this->notificationReports = new ArrayCollection();
     }
 
     public function __toString(): string
@@ -238,6 +244,11 @@ class User
         }
 
         return $this;
+    }
+
+    public function getNotificationReport()
+    {
+        return $this->notificationReports;
     }
 
     public function getFullName(): string

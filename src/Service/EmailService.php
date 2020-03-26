@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\NotificationReport;
 use App\Entity\Post;
 use App\Entity\User;
 use Predis\Client;
@@ -25,6 +26,7 @@ class EmailService
 
     public function saveEmail(Post $post, $followers): bool
     {
+        /** @var User $follower */
         foreach ($followers as $follower) {
             $email = (new Email())
                 ->from($post->getAuthor()->getEmail())
@@ -34,14 +36,24 @@ class EmailService
                         'New post from %s. Check this out!',
                         $post->getAuthor()->getFullName()
                     ))
-                ->text('Your favorite following just released a post. Let`s see what`s new!');
+                ->text(sprintf('%s, your favorite following just released a post. Let`s see what`s new!', $follower->getFullName()));
 
             $key = sprintf('notification_%s_%s', $post->getAuthor()->getId(), $follower->getId());
+
             $this->redisService->get($key, function (ItemInterface $item) use ($email) {
-                $item->set(serialize($email));
+                return serialize($email);
             });
+
+            $notification = new NotificationReport($post->getAuthor(), $follower);
+            $em->persist($notification);
+            $em->flush();
         }
-        
+
         return true;
+    }
+
+    public function sendEmail(Email $email)
+    {
+        $this->mailer->send($email);
     }
 }
