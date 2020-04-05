@@ -4,13 +4,11 @@ namespace App\Controller;
 
 use App\Dto\CreatePostDto;
 use App\EventListener\RequestListener;
-use App\Service\EmailService;
 use App\Service\NotificationEmailService;
 use App\Service\PostService;
 use App\Service\RequestService;
 use App\Service\ResponseService;
 use App\Utils\BaseController;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;

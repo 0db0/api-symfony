@@ -8,7 +8,7 @@ use Symfony\Component\Mime\Header\Headers;
 use Symfony\Component\Mime\Part\AbstractPart;
 
 /**
- *@ORM\Entity(repositoryClass="App\Repository\CustomEmailRepository")
+ *@ORM\Entity(repositoryClass="App\Repository\NotificationEmailRepository")
  */
 class NotificationEmail
 {

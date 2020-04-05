@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\NotificationEmail;
 use App\Entity\Post;
+use App\Repository\NotificationEmailRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
@@ -26,11 +27,17 @@ class EmailService
     /** @var RedisClient  */
     private $redisClient;
 
-    public function __construct(MailerInterface $mailer,
-                                UserService $userService,
-                                PostService $postService,
-                                EntityManagerInterface $em,
-                                RedisClient $redisClient
+    /** @var NotificationEmailRepository  */
+    private $emailRepository;
+
+    public function __construct(
+        MailerInterface $mailer,
+        UserService $userService,
+        PostService $postService,
+        EntityManagerInterface $em,
+        RedisClient $redisClient,
+        NotificationEmailRepository $emailRepository
+
     )
     {
         $this->mailer = $mailer;
@@ -38,6 +45,12 @@ class EmailService
         $this->postService = $postService;
         $this->em = $em;
         $this->redisClient = $redisClient;
+        $this->emailRepository = $emailRepository;
+    }
+
+    public function getAllEmails(): array
+    {
+        return $this->emailRepository->getAllEmails();
     }
 
     public function sendNotificationEmail(Post $post)
@@ -45,10 +58,9 @@ class EmailService
         $notificationEmailList = $this->createNotificationEmailsForNewPost($post);
         $this->sendToQueue($notificationEmailList);
         $this->saveEmails($notificationEmailList);
-
     }
 
-    public function createNotificationEmailsForNewPost(Post $post): array
+    private function createNotificationEmailsForNewPost(Post $post): array
     {
         $author = $this->postService->getPostAuthor($post);
         $NotificationEmailList = [];
@@ -72,7 +84,7 @@ class EmailService
         return $NotificationEmailList;
     }
 
-    public function sendToQueue(array $emailList): void
+    private function sendToQueue(array $emailList): void
     {
         foreach ($emailList as $email) {
             $queueId = $this->redisClient->generateQueueIdForEmail($email);
@@ -81,7 +93,7 @@ class EmailService
         }
     }
 
-    public function saveEmails(array $emailList): void
+    private function saveEmails(array $emailList): void
     {
         foreach ($emailList as $email) {
             $this->em->persist($email);
@@ -90,8 +102,33 @@ class EmailService
         $this->em->flush();
     }
 
+    /**
+     * @param NotificationEmail[] $emailList
+     */
+    public function sendEmails(array $emailList): void
+    {
+       foreach ($emailList as $email) {
+           $preparedNotificationEmail = $this->prepareNotificationEmailForSending($email);
+
+           try {
+               echo 'Email was send!'."\n";
+//            $this->mailer->send($preparedNotificationEmail);
+               $email->setStatus(NotificationEmail::NOTIFICATION_EMAIL_STATUS_PERFORMED);
+           } catch (TransportExceptionInterface $exception) {
+//loggin
+               $email->setStatus(NotificationEmail::NOTIFICATION_EMAIL_STATUS_FAILED);
+           }
+           $this->em->persist($email);
+           $this->em->flush();
+
+           $this->removeFromQueue($email);
+       }
+    }
+
     public function sendEmail(NotificationEmail $email): void
     {
+//        foreach ()
+
         $preparedNotificationEmail = $this->prepareNotificationEmailForSending($email);
 
         try {
@@ -110,7 +147,7 @@ class EmailService
 
     private function removeFromQueue(NotificationEmail $email)
     {
-        $this->redisClient->delete($email);
+        $this->emailRepository->deleteEmail($email);
     }
 
     private function prepareNotificationEmailForSending(NotificationEmail $notificationEmail): Email

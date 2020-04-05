@@ -6,6 +6,7 @@ use App\Dto\CreatePostDto;
 use App\Entity\Post;
 use App\Entity\User;
 use App\Event\PostCreatedEvent;
+use App\EventSubscriber\PostCreateSubscriber;
 use App\Repository\PostRepository;
 use App\Repository\TagRepository;
 use Doctrine\ORM\EntityManagerInterface;

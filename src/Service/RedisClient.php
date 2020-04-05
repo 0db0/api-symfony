@@ -16,9 +16,7 @@ class RedisClient
     /** @var UserService  */
     private $userService;
 
-    public function __construct(
-                                UserService $userService
-    )
+    public function __construct(UserService $userService)
     {
         $this->predis = new Client();
         $this->userService = $userService;
@@ -45,9 +43,9 @@ class RedisClient
         $this->predis->set($key, $value);
     }
 
-    public function delete($key): void
+    public function delete(string $key): int
     {
-        $this->predis->del([$key->getQueueId()]);
+        return $this->predis->del([$key]);
     }
 
     public function generateQueueIdForEmail(NotificationEmail $email): string

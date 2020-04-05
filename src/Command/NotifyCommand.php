@@ -11,41 +11,30 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class NotifyCommand extends Command
 {
-    public static $defaultName = 'app:notify-followers';
-
     /** @var EmailService  */
     private $emailService;
 
-    /** @var RedisClient */
-    private $redisClient;
-
-
-    public function __construct(
-        EmailService $emailService,
-        RedisClient $redisClient
-    ) {
+    public function __construct(EmailService $emailService)
+    {
         $this->emailService = $emailService;
-        $this->redisClient  = $redisClient;
-
         parent::__construct();
     }
 
-    protected function configure() { }
+    protected function configure()
+    {
+        $this->setName('app:notify-followers')
+            ->setDescription('Send notification email to followers');
+    }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-//        $isWork = $redisClient->has('notify_command');
-//        if ($isWork) {
-//            return 0;
-//        } else {
-//            $redisClient->set('notify_command');
+        $emailList = $this->emailService->getAllEmails();
+
+//        foreach ($emailList as $email) {
+//            $this->emailService->sendEmail($email);
 //        }
 
-        $emailList = $this->redisClient->getAllEmail();
-
-        foreach ($emailList as $email) {
-            $this->emailService->sendEmail($email);
-        }
+            $this->emailService->sendEmails($emailList);
 
         return 0;
     }
