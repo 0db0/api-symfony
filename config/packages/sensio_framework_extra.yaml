@@ -1,0 +1,7 @@
+sensio_framework_extra:
+    request:
+        converters: true
+        disable: ['doctrine.orm', 'datetime']
+        auto-convert: false
+    router:
+        annotations: false

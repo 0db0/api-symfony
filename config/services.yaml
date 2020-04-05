@@ -6,6 +6,16 @@
 parameters:
 
 services:
+
+    app.param_converter.custom_param_converter:
+        class: App\Utils\CustomParamConverter
+        tags:
+            - { name: request.param_converter, converter: 'custom_param_converter' }
+#
+#    App\EventListener\RequestListener:
+#        tags:
+#             - { name: kernel.event_listener, event: kernel.request, priority: 150 }
+
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.

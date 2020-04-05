@@ -67,8 +67,6 @@ class ResponseService
         if ($data instanceof Post) {
             return $this->createResponseForPost($data);
         }
-
-
     }
 
 //    private function prepareResponseFromCollection(array $data): array

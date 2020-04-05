@@ -54,10 +54,13 @@ class Post
      */
     private $updatedAt;
 
-    public function __construct()
+    public function __construct(string $title, string $text, User $author)
     {
-        $this->comments = new ArrayCollection();
-        $this->tags = new ArrayCollection();
+        $this->title     = $title;
+        $this->text      = $text;
+        $this->author    = $author;
+        $this->comments  = new ArrayCollection();
+        $this->tags      = new ArrayCollection();
         $this->createdAt = $this->updatedAt = new \DateTime();
     }
 

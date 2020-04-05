@@ -2,14 +2,14 @@
 
 namespace App\Repository;
 
-use App\Entity\NotificationReport;
+use App\Entity\NotificationEmail;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-class NotificationReportRepository extends ServiceEntityRepository
+class CustomEmailRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, NotificationReport::class);
+        parent::__construct($registry, NotificationEmail::class);
     }
 }

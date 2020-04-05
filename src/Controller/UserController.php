@@ -2,25 +2,26 @@
 
 namespace App\Controller;
 
+use App\Dto\CreateUserDto;
 use App\Entity\User;
 use App\Service\ResponseService;
 use App\Service\UserService;
+use App\Utils\BaseController;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
-class UserController extends AbstractController
+class UserController extends BaseController
 {
     /** @var UserService  */
     private $userService;
 
-    /** @var ResponseService  */
-    private $responseService;
-
     public function __construct(UserService $userService, ResponseService $responseService)
     {
         $this->userService = $userService;
-        $this->responseService = $responseService;
+
+        parent::__construct($responseService);
     }
 
     /**
@@ -29,9 +30,8 @@ class UserController extends AbstractController
     public function list()
     {
         $userList = $this->userService->createUsersList();
-        $response = $this->responseService->buildResponse($userList, 200, 'hal+json');
 
-        return $response;
+        return $this->buildResponse($userList, 200, 'hal+json');
     }
 
     /**
@@ -41,28 +41,17 @@ class UserController extends AbstractController
     {
         $user = $this->userService->findUserById($id);
 
-        return $this->responseService->buildResponse($user, 200);
+        return $this->buildResponse($user, 200);
     }
 
     /**
      * @Route("/api/users", name="user_create", methods={"POST"})
+     * @ParamConverter()
      */
-    public function create(Request $request)
+    public function create(CreateUserDto $userDto)
     {
-        $data = json_decode($request->getContent());
+        $user = $this->userService->createNewUser($userDto);
 
-        $user = $this->userService->createNewUser($data);
-
-        $this->save($user);
-
-        return $this->responseService->buildResponse($user, 201);
-    }
-// todo: Реализовать PostController через Dto object + use Redis for highload
-    private function save(User $user): void
-    {
-        $em = $this->getDoctrine()->getManager();
-
-        $em->persist($user);
-        $em->flush();
+        return $this->buildResponse($user, 201);
     }
 }

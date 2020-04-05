@@ -2,15 +2,18 @@
 
 namespace App\Service;
 
+use App\Dto\CreatePostDto;
 use App\Entity\Post;
 use App\Entity\User;
-use App\Exception\ItemNotFoundException;
+use App\Event\PostCreatedEvent;
 use App\Repository\PostRepository;
 use App\Repository\TagRepository;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use http\Encoding\Stream\Inflate;
 use Predis\Client;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -27,27 +30,28 @@ class PostService
     /** @var EntityManagerInterface  */
     private $em;
 
-    /** @var UserRepository  */
-    private $userRepository;
-
     /** @var TagRepository  */
     private $tagRepository;
-    /** @var EmailService  */
-    private $emailService;
+
+    /** @var UserService  */
+    private $userService;
+
+    /** @var EventDispatcherInterface  */
+    private $dispatcher;
 
     public function __construct(PostRepository $repository,
                                 EntityManagerInterface $em,
-                                UserRepository $userRepository,
                                 TagRepository $tagRepository,
-                                EmailService $emailService
+                                UserService $userService,
+                                EventDispatcherInterface $dispatcher
     )
     {
         $this->repository     = $repository;
         $this->cache          = new RedisAdapter(new Client());
         $this->em             = $em;
-        $this->userRepository = $userRepository;
         $this->tagRepository  = $tagRepository;
-        $this->emailService = $emailService;
+        $this->userService    = $userService;
+        $this->dispatcher = $dispatcher;
     }
 
     /**
@@ -65,7 +69,6 @@ class PostService
 
         if (!empty($tags)) {
             return $this->repository->findPostsByTags($tags);
-//            return $this->tagRepository->findPostByTags($tags);
         }
 
         $key = sprintf(
@@ -90,17 +93,13 @@ class PostService
 
     }
 
-    public function createNewPost($item): Post
+    public function createNewPost(string $title, string $text, int $authorId): Post
     {
-        $post = new Post();
-        $post->setTitle($item->title);
-        $post->setText($item->text);
-        $user = $this->getUserById($item->author);
-        $post->setAuthor($user);
-
+        $user = $this->userService->getUserById($authorId);
+        $post = new Post($title, $text, $user);
         $this->save($post);
 
-//        $this->sendNotificationForFollowers($post);
+        $this->dispatcher->dispatch(new PostCreatedEvent($post), PostCreatedEvent::NAME);
 
         return $post;
     }
@@ -130,16 +129,9 @@ class PostService
         $this->em->flush();
     }
 
-    public function sendNotificationForFollowers(Post $post)
+    public function getPostAuthor(Post $post): User
     {
-        $followers = $post->getAuthor()->getFollowers();
-
-        $this->emailService->saveEmail($post, $followers);
-    }
-
-    private function getUserById(int $id): ?User
-    {
-        return $this->userRepository->findOneBy(['id' => $id]);
+        return $post->getAuthor();
     }
 
     private function save(Post $post): void

@@ -2,8 +2,10 @@
 
 namespace App\Service;
 
+use App\Dto\CreateUserDto;
 use App\Entity\User;
 use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 class UserService
@@ -14,11 +16,17 @@ class UserService
     /** @var RequestService  */
     private $requestService;
 
+    /** @var EntityManagerInterface  */
+    private $entityManager;
+
     public function __construct(UserRepository $repository,
-                                RequestService $requestService)
+                                RequestService $requestService,
+                                EntityManagerInterface $entityManager
+    )
     {
         $this->repository = $repository;
         $this->requestService = $requestService;
+        $this->entityManager = $entityManager;
     }
 
     public function createAllUsersList()
@@ -44,19 +52,32 @@ class UserService
                   ->findUsersByRange(($offset - 1) * PaginationService::LIMIT_USER, $offset * PaginationService::LIMIT_USER);
     }
 
-    public function findUserById(int $id): User
+    public function getUserById(int $id): User
     {
         return $this->repository->findOneBy(['id' => $id]);
     }
 
-    public function createNewUser(object $data): User
+    public function getUserByEmail(string $email): ?User
     {
-        $user = new User();
-        $user->setFirstName($data->firstName);
-        $user->setLastName($data->lastName);
-        $user->setPassword($data->password);
-        $user->setEmail($data->email);
+        return $this->repository->findOneBy(['email' => $email]);
+    }
 
-        return $user;
+    public function createNewUser(CreateUserDto $userDto): User
+    {
+        $user = new User(
+            $userDto->getEmail(),
+            $userDto->getPassword(),
+            $userDto->getFirstName(),
+            $userDto->getLastName()
+        );
+
+        $this->save($user);
+
+    }
+
+    private function save(User $user): void
+    {
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
     }
 }

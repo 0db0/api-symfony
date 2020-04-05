@@ -2,15 +2,20 @@
 
 namespace App\Controller;
 
-use App\Entity\User;
+use App\Dto\CreatePostDto;
+use App\EventListener\RequestListener;
+use App\Service\EmailService;
+use App\Service\NotificationEmailService;
 use App\Service\PostService;
 use App\Service\RequestService;
 use App\Service\ResponseService;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Utils\BaseController;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
-class PostController extends AbstractController
+class PostController extends BaseController
 {
     /** @var RequestService  */
     private $requestService;
@@ -18,17 +23,19 @@ class PostController extends AbstractController
     /** @var PostService  */
     private $postService;
 
-    /** @var ResponseService  */
-    private $responseService;
-
-    public function __construct(RequestService $requestService, PostService $postService, ResponseService $responseService)
+    public function __construct(RequestService $requestService,
+                                PostService $postService,
+                                ResponseService $responseService
+    )
     {
         $this->requestService = $requestService;
         $this->postService = $postService;
-        $this->responseService = $responseService;
+
+        parent::__construct($responseService);
     }
 
     /**
+     *
      * @Route("/api/posts", name="posts_list", methods={"GET"})
      */
     public function list()
@@ -36,7 +43,7 @@ class PostController extends AbstractController
         $params = $this->requestService->getParameters();
         $posts = $this->postService->getPosts($params);
 
-        return $this->responseService->buildResponse($posts, 200);
+        return $this->buildResponse($posts, 200);
     }
 
     /**
@@ -46,22 +53,23 @@ class PostController extends AbstractController
     {
         $post = $this->postService->getPost($id);
 
-        return $this->responseService->buildResponse($post, 200);
+        return $this->buildResponse($post, 200);
     }
+
+    /*
+     * class CreatePostDto {id, message}
+     * getId()
+     */
 
     /**
      * @Route("/api/posts", name="post_create", methods={"POST"})
+     * @ParamConverter()
      */
-    public function create()
+    public function create(CreatePostDto $requestDto)
     {
-        $data = $this->requestService->getContent();
-        $post = $this->postService->createNewPost($data);
+        $post = $this->postService->createNewPost($requestDto->getTitle(), $requestDto->getText(), $requestDto->getAuthorId());
 
-        if ($post) {
-            $this->postService->sendNotificationForFollowers($post);
-        }
-
-        return $this->responseService->buildResponse($post, 201);
+        return $this->buildResponse($post, 201);
     }
 
     /**
@@ -69,10 +77,10 @@ class PostController extends AbstractController
      */
     public function edit(int $id, Request $request)
     {
-        $post = $this->postService->findPost($id);
+        $post = $this->postService->getPost($id);
         $post = $this->postService->editPost($post, $request);
 
-        return $this->responseService->buildResponse($post, 203);
+        return $this->buildResponse($post, 203);
     }
 
     /**
@@ -80,9 +88,9 @@ class PostController extends AbstractController
      */
     public function destroy(int $id)
     {
-        $post = $this->postService->findPost($id);
+        $post = $this->postService->getPost($id);
         $this->postService->deletePost($post);
 
-        return $this->responseService->buildResponse('', 204);
+        return $this->buildResponse('', 204);
     }
 }
