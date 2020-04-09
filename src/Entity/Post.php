@@ -5,7 +5,7 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
+use Doctrine\ORM\PersistentCollection;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PostRepository")
@@ -25,7 +25,7 @@ class Post
     private $author;
 
     /**
-     * @ORM\Column(type="string", length=140)
+     * @ORM\Column(type="string", length=140, unique=true)
      */
     private $title;
 
@@ -38,6 +38,12 @@ class Post
      * @ORM\OneToMany(targetEntity="App\Entity\Comment", mappedBy="post")
      */
     private $comments;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="App\Entity\Tag", inversedBy="post")
+     */
+    private $tags;
+
     /**
      * @ORM\Column(type="datetime")
      */
@@ -48,9 +54,13 @@ class Post
      */
     private $updatedAt;
 
-    public function __construct()
+    public function __construct(string $title, string $text, User $author)
     {
-        $this->comments = new ArrayCollection();
+        $this->title     = $title;
+        $this->text      = $text;
+        $this->author    = $author;
+        $this->comments  = new ArrayCollection();
+        $this->tags      = new ArrayCollection();
         $this->createdAt = $this->updatedAt = new \DateTime();
     }
 
@@ -118,6 +128,32 @@ class Post
             if ($comment->getPost() === $this) {
                 $comment->setPost(null);
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection| Tag[]
+     */
+    public function getTags(): Collection
+    {
+        return $this->tags;
+    }
+
+    public function addTags(Tag $tag): self
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags[] = $tag;
+        }
+
+        return $this;
+    }
+
+    public function removeTag(Tag $tag): self
+    {
+        if ($this->tags->contains($tag)) {
+            $this->tags->removeElement($tag);
         }
 
         return $this;

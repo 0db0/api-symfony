@@ -3,7 +3,6 @@
 namespace App\Service;
 
 use App\Entity\Post;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use App\Entity\User;
@@ -42,6 +41,10 @@ class ResponseService
     {
         $response = [];
 
+        if (is_null($data)) {
+            $response = $this->createBadResponse();
+        }
+
         if (is_object($data)) {
             $response = $this->prepareResponseFromObject($data);
         }
@@ -64,8 +67,6 @@ class ResponseService
         if ($data instanceof Post) {
             return $this->createResponseForPost($data);
         }
-
-
     }
 
 //    private function prepareResponseFromCollection(array $data): array
@@ -74,20 +75,17 @@ class ResponseService
 //
 //    }
 
-    private function prepareResponseFromCollection (array $list): array
+    private function prepareResponseFromCollection (array $collection): array
     {
         $response = [
             "ok" => "true",
-            'items' => [],
-            ];
-        foreach ($list as $item) {
+            'count' => count($collection),
+            'items' => [
+            ],
+        ];
+
+        foreach ($collection as $item) {
             array_push($response['items'], $item->getId());
-//            $response['items'][] = [
-//                'id' => $item->getId(),
-//                'title' => $post->getTitle(),
-//                'text' => $post->getText(),
-//                'createdAt' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
-//            ];
         }
 
         return $response;
@@ -126,6 +124,10 @@ class ResponseService
                 'title' => $post->getTitle(),
                 'text' => $post->getText(),
                 'author' => $post->getAuthor()->getId(),
+                'tags' => [
+                    'count' => $post->getTags()->count(),
+                    'titles' => $this->getTags($post),
+                ],
             ],
             "_links" => [
                 'self' => [
@@ -140,10 +142,43 @@ class ResponseService
 
         return $response;
     }
+
+    private function getTags(Post $post): array
+    {
+        $tags = $post->getTags()->toArray();
+        $titles = [];
+
+        foreach ($tags as $tag) {
+            $titles[] = $tag->getTitle();
+        }
+
+        return $titles;
+    }
+
+    private function createBadResponse()
+    {
+        $response = [
+            'ok' => 'false',
+            'error' => [
+                'error_code' => 0,
+                'error_msg' => 'Item not found',
+//                'request_params' => $this->getRequestParameters($params),
+            ],
+        ];
+
+        return $response;
+    }
+
+//    private function getRequestParameters($params): array
+//    {
+//
+//        $requestParams = [];
+//        foreach ($params as $key => $value) {
+//            $requestParams[] = ['key' => $key, 'value' => $value];
+//        }
+//        return $requestParams;
+//    }
 }
-
-
-
 
 
 //

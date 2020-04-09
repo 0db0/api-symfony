@@ -11,6 +11,7 @@ class RequestService
     private const PARAMETER_OFFSET_DEFAULT_VALUE = 1;
     private const PARAMETER_LIMIT = 'limit';
     private const PARAMETER_LIMIT_DEFAULT_VALUE = 100;
+    private const PARAMETER_TAGS_DEFAULT_VALUE = '';
 
     /** @var RequestStack  */
     private $requestStack;
@@ -49,12 +50,12 @@ class RequestService
         return $this->request->getMethod();
     }
 
-    public function getParameters()
+    public function getParameters(): array
     {
        return $this->getParamsFromQueryStringKeys();
     }
 
-    private function getParamsFromQueryStringKeys()
+    private function getParamsFromQueryStringKeys(): array
     {
         $keys = $this->requestStack->getCurrentRequest()->query->keys();
 
@@ -69,6 +70,12 @@ class RequestService
             $params['limit'] = (int) $this->requestStack->getCurrentRequest()->query->get('limit');
         } else {
             $params['limit'] = self::PARAMETER_LIMIT_DEFAULT_VALUE;
+        }
+
+        if (in_array('tags', $keys)) {
+            $params['tags'] = $this->requestStack->getCurrentRequest()->query->get('tags');
+        } else {
+            $params['tags'] = self::PARAMETER_TAGS_DEFAULT_VALUE;
         }
 
         return $params;

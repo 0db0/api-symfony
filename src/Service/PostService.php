@@ -4,11 +4,13 @@ namespace App\Service;
 
 use App\Entity\Post;
 use App\Entity\User;
+use App\Event\PostCreatedEvent;
 use App\Repository\PostRepository;
-use App\Repository\UserRepository;
+use App\Repository\TagRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Predis\Client;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -25,19 +27,47 @@ class PostService
     /** @var EntityManagerInterface  */
     private $em;
 
-    /** @var UserRepository  */
-    private $userRepository;
+    /** @var TagRepository  */
+    private $tagRepository;
 
-    public function __construct(PostRepository $repository, EntityManagerInterface $em, UserRepository $userRepository)
+    /** @var UserService  */
+    private $userService;
+
+    /** @var EventDispatcherInterface  */
+    private $dispatcher;
+
+    public function __construct(PostRepository $repository,
+                                EntityManagerInterface $em,
+                                TagRepository $tagRepository,
+                                UserService $userService,
+                                EventDispatcherInterface $dispatcher
+    )
     {
-        $this->repository = $repository;
-        $this->cache = new RedisAdapter(new Client());
-        $this->em = $em;
-        $this->userRepository = $userRepository;
+        $this->repository     = $repository;
+        $this->cache          = new RedisAdapter(new Client());
+        $this->em             = $em;
+        $this->tagRepository  = $tagRepository;
+        $this->userService    = $userService;
+        $this->dispatcher     = $dispatcher;
     }
 
-    public function getPosts(int $limit, int $offset): array
+    /**
+     * @param array $params
+     * @return array| Post[]
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function getPosts(array $params): array
     {
+        list(
+            'limit' =>$limit,
+            'offset' => $offset,
+            'tags' => $tags
+            ) = $params;
+
+        if (!empty($tags)) {
+            return $this->repository->findPostsByTags($tags);
+        }
+
         $key = sprintf(
             'posts_list_%d_%d',
                     $offset,
@@ -54,24 +84,28 @@ class PostService
         return unserialize($posts);
     }
 
-    public function findPost(int $id): Post
+    public function getPost(int $id): ?Post
     {
         return $this->repository->findOneBy(['id' => $id]);
+
     }
 
-    public function createNewPost($item): Post
+    public function createNewPost(string $title, string $text, int $authorId): Post
     {
-        $post = new Post();
-        $post->setTitle($item->title);
-        $post->setText($item->text);
-        $user = $this->getUserById($item->author);
-        $post->setAuthor($user);
+        $user = $this->userService->getUserById($authorId);
+        $post = new Post($title, $text, $user);
         $this->save($post);
+
+//        $this->logger->debug('post created', [
+//            'post_id' => $post->getId()
+//        ]);
+
+        $this->dispatcher->dispatch(new PostCreatedEvent($post), PostCreatedEvent::NAME);
 
         return $post;
     }
 
-    public function editPost(Post $post, Request $request)
+    public function editPost(Post $post, Request $request): Post
     {
         $content = json_decode($request->getContent());
 
@@ -96,12 +130,12 @@ class PostService
         $this->em->flush();
     }
 
-    private function getUserById(int $id): User
+    public function getPostAuthor(Post $post): User
     {
-        return $this->userRepository->findOneBy(['id' => $id]);
+        return $post->getAuthor();
     }
 
-    private function save(Post $post)
+    private function save(Post $post): void
     {
         $this->em->persist($post);
         $this->em->flush();

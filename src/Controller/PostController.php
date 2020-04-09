@@ -2,14 +2,21 @@
 
 namespace App\Controller;
 
+use App\Dto\CreatePostDto;
+use App\Dto\CreateUserDto;
+use App\Entity\Post;
+use App\EventListener\RequestListener;
+use App\Service\NotificationEmailService;
 use App\Service\PostService;
 use App\Service\RequestService;
 use App\Service\ResponseService;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Utils\BaseController;
+use Psr\Log\LoggerInterface;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
-class PostController extends AbstractController
+class PostController extends BaseController
 {
     /** @var RequestService  */
     private $requestService;
@@ -17,47 +24,57 @@ class PostController extends AbstractController
     /** @var PostService  */
     private $postService;
 
-    /** @var ResponseService  */
-    private $responseService;
+    /** @var LoggerInterface  */
+    private $logger;
 
-    public function __construct(RequestService $requestService, PostService $postService, ResponseService $responseService)
+    public function __construct(
+        RequestService $requestService,
+        PostService $postService,
+        ResponseService $responseService,
+        LoggerInterface $logger
+    )
     {
         $this->requestService = $requestService;
         $this->postService = $postService;
-        $this->responseService = $responseService;
+        $this->logger = $logger;
+
+        parent::__construct($responseService);
     }
 
-//    todo: реализовать поиск с пмощью оффсетов(queryString). json {"ok": "true", "count": "countOfPosts", "items"["id", "id", "id", "id"]}
     /**
+     *
      * @Route("/api/posts", name="posts_list", methods={"GET"})
      */
     public function list()
     {
         $params = $this->requestService->getParameters();
-        $posts = $this->postService->getPosts($params['limit'], $params['offset']);
+        $posts = $this->postService->getPosts($params);
 
-        return $this->responseService->buildResponse($posts, 200);
+        return $this->buildResponse($posts, 200);
     }
 
     /**
      * @Route("/api/posts/{id}", name="post_show", methods={"GET"}, requirements={"id"="\d+"})
      */
-    public function show(int $id)
+    public function show(Post $post)
     {
-        $post = $this->postService->findPost($id);
-
-        return $this->responseService->buildResponse($post, 200);
+        return $this->buildResponse($post, 200);
     }
 
     /**
      * @Route("/api/posts", name="post_create", methods={"POST"})
+     * @ParamConverter()
      */
-    public function create()
+    public function create(CreatePostDto $requestDto, Request $request)
     {
-        $data = $this->requestService->getContent();
-        $post = $this->postService->createNewPost($data);
+        $this->logger->info('Wow. I`am in '.__METHOD__.' now. Great!');
+        $post = $this->postService->createNewPost(
+            $requestDto->getTitle(),
+            $requestDto->getText(),
+            $requestDto->getAuthorId()
+        );
 
-        return $this->responseService->buildResponse($post, 201);
+        return $this->buildResponse($post, 201);
     }
 
     /**
@@ -65,10 +82,10 @@ class PostController extends AbstractController
      */
     public function edit(int $id, Request $request)
     {
-        $post = $this->postService->findPost($id);
+        $post = $this->postService->getPost($id);
         $post = $this->postService->editPost($post, $request);
 
-        return $this->responseService->buildResponse($post, 203);
+        return $this->buildResponse($post, 203);
     }
 
     /**
@@ -76,9 +93,9 @@ class PostController extends AbstractController
      */
     public function destroy(int $id)
     {
-        $post = $this->postService->findPost($id);
+        $post = $this->postService->getPost($id);
         $this->postService->deletePost($post);
 
-        return $this->responseService->buildResponse('', 204);
+        return $this->buildResponse('', 204);
     }
 }
