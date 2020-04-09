@@ -18,9 +18,9 @@ class NotificationEmailRepository extends ServiceEntityRepository
         parent::__construct($registry, NotificationEmail::class);
     }
 
-    public function getAllEmails(): array
+    public function findAllEmails(): array
     {
-        return $this->redisClient->getAllEmail();
+        return $this->redisClient->getAll();
     }
 
     public function deleteEmail(NotificationEmail $email)

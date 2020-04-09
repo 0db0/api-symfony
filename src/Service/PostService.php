@@ -2,18 +2,14 @@
 
 namespace App\Service;
 
-use App\Dto\CreatePostDto;
 use App\Entity\Post;
 use App\Entity\User;
 use App\Event\PostCreatedEvent;
-use App\EventSubscriber\PostCreateSubscriber;
 use App\Repository\PostRepository;
 use App\Repository\TagRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use http\Encoding\Stream\Inflate;
 use Predis\Client;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
-use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -52,7 +48,7 @@ class PostService
         $this->em             = $em;
         $this->tagRepository  = $tagRepository;
         $this->userService    = $userService;
-        $this->dispatcher = $dispatcher;
+        $this->dispatcher     = $dispatcher;
     }
 
     /**
@@ -99,6 +95,10 @@ class PostService
         $user = $this->userService->getUserById($authorId);
         $post = new Post($title, $text, $user);
         $this->save($post);
+
+//        $this->logger->debug('post created', [
+//            'post_id' => $post->getId()
+//        ]);
 
         $this->dispatcher->dispatch(new PostCreatedEvent($post), PostCreatedEvent::NAME);
 

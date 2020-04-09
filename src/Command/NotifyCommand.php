@@ -3,8 +3,6 @@
 namespace App\Command;
 
 use App\Service\EmailService;
-use App\Service\RedisClient;
-use App\Service\UserService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -29,12 +27,7 @@ class NotifyCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $emailList = $this->emailService->getAllEmails();
-
-//        foreach ($emailList as $email) {
-//            $this->emailService->sendEmail($email);
-//        }
-
-            $this->emailService->sendEmails($emailList);
+        $this->emailService->sendNotificationEmails($emailList);
 
         return 0;
     }

@@ -3,12 +3,12 @@
 namespace App\Service;
 
 use App\Entity\NotificationEmail;
+use App\Utils\BaseEmailService;
 use Predis\Client;
 use Symfony\Component\Mime\Email;
 
 class RedisClient
 {
-    private const NOTIFICATION_EMAIL_KEY = 'notifications:post_emails:';
 
     /** @var Client  */
     private $predis;
@@ -22,9 +22,9 @@ class RedisClient
         $this->userService = $userService;
     }
 
-    public function getAllEmail(): array
+    public function getAll(): array
     {
-         $keys = $this->predis->scan(0, ['match' => self::NOTIFICATION_EMAIL_KEY.'*']);
+         $keys = $this->predis->scan(0, ['match' => BaseEmailService::NOTIFICATION_EMAIL_KEY.'*']);
          $valuesList = $this->predis->mget($keys[1]);
          $emailList = [];
          foreach ($valuesList as $value) {
@@ -43,16 +43,8 @@ class RedisClient
         $this->predis->set($key, $value);
     }
 
-    public function delete(string $key): int
+    public function del(string $key): int
     {
         return $this->predis->del([$key]);
-    }
-
-    public function generateQueueIdForEmail(NotificationEmail $email): string
-    {
-        $author = $this->userService->getUserByEmail($email->getSender());
-        $follower = $this->userService->getUserByEmail($email->getAddressee());
-
-        return self::NOTIFICATION_EMAIL_KEY . $author->getId() . ':'. $follower->getId();
     }
 }

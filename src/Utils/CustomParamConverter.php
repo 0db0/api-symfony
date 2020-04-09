@@ -9,41 +9,49 @@ use Symfony\Component\HttpFoundation\Request;
 
 class CustomParamConverter implements ParamConverterInterface
 {
-    /** @var CreatePostDtoAssembler  */
-    private $dtoAssembler;
-
-    public function __construct(CreatePostDtoAssembler $dtoAssembler)
-    {
-        $this->dtoAssembler = $dtoAssembler;
-    }
-
     public function apply(Request $request, ParamConverter $configuration)
     {
         $reflectionController = new \ReflectionMethod($request->attributes->get('_controller'));
 
-        if (! $name = $configuration->getName()) {
-            $name = $reflectionController->getParameters()[0]->getName();
+        $parameters = $reflectionController->getParameters();
+
+        foreach ($parameters as $parameter) {
+            if (! $name = $configuration->getName()) {
+                $name = $parameter->getName();
+            }
+
+            if (! $class = $configuration->getClass()) {
+                $type = $parameter->getType();
+                $class = $type->getName();
+
+                if (strpos($class, 'App\Entity\\') === 0 || strpos($class, 'App\Dto\\') === 0) {
+                    $reflectionClass = new \ReflectionClass($class);
+                    $properties = $reflectionClass->getProperties();
+
+                    if ($arguments = $this->getArguments($properties, $request)) {
+                        $objectDto = $reflectionClass->newInstanceArgs($arguments);
+
+                        $request->attributes->set($name, $objectDto);
+                    }
+                }
+            }
         }
-
-        if (! $class = $configuration->getClass()) {
-            $class = (string) $reflectionController->getParameters()[0]->getType();
-        }
-
-        $reflectionClass = new \ReflectionClass($class);
-        $arguments = $request->request->all();
-        $objectDto = $reflectionClass->newInstanceArgs($arguments);
-
-        $request->attributes->set($name, $objectDto);
-
         return true;
+    }
+
+    private function getArguments(array $properties, Request $request): ?array
+    {
+        foreach ($properties as $property) {
+            if ($argument = $request->request->get($property->getName())) {
+                $arguments[] = $argument;
+            }
+        }
+
+        return $arguments ?? null;
     }
 
     public function supports(ParamConverter $configuration)
     {
-//        if ($configuration->getClass() == null) {
-//            return false;
-//        }
-
         return true;
     }
 }

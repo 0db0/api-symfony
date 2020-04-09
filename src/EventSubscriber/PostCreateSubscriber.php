@@ -19,7 +19,7 @@ class PostCreateSubscriber implements EventSubscriberInterface
     public function onPostCreate(PostCreatedEvent $event)
     {
         $post = $event->getPost();
-        $this->emailService->sendNotificationEmail($post);
+        $this->emailService->saveNotificationEmail($post);
     }
 
     public static function getSubscribedEvents()

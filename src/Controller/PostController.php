@@ -3,12 +3,15 @@
 namespace App\Controller;
 
 use App\Dto\CreatePostDto;
+use App\Dto\CreateUserDto;
+use App\Entity\Post;
 use App\EventListener\RequestListener;
 use App\Service\NotificationEmailService;
 use App\Service\PostService;
 use App\Service\RequestService;
 use App\Service\ResponseService;
 use App\Utils\BaseController;
+use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -21,13 +24,19 @@ class PostController extends BaseController
     /** @var PostService  */
     private $postService;
 
-    public function __construct(RequestService $requestService,
-                                PostService $postService,
-                                ResponseService $responseService
+    /** @var LoggerInterface  */
+    private $logger;
+
+    public function __construct(
+        RequestService $requestService,
+        PostService $postService,
+        ResponseService $responseService,
+        LoggerInterface $logger
     )
     {
         $this->requestService = $requestService;
         $this->postService = $postService;
+        $this->logger = $logger;
 
         parent::__construct($responseService);
     }
@@ -47,25 +56,23 @@ class PostController extends BaseController
     /**
      * @Route("/api/posts/{id}", name="post_show", methods={"GET"}, requirements={"id"="\d+"})
      */
-    public function show(int $id)
+    public function show(Post $post)
     {
-        $post = $this->postService->getPost($id);
-
         return $this->buildResponse($post, 200);
     }
-
-    /*
-     * class CreatePostDto {id, message}
-     * getId()
-     */
 
     /**
      * @Route("/api/posts", name="post_create", methods={"POST"})
      * @ParamConverter()
      */
-    public function create(CreatePostDto $requestDto)
+    public function create(CreatePostDto $requestDto, Request $request)
     {
-        $post = $this->postService->createNewPost($requestDto->getTitle(), $requestDto->getText(), $requestDto->getAuthorId());
+        $this->logger->info('Wow. I`am in '.__METHOD__.' now. Great!');
+        $post = $this->postService->createNewPost(
+            $requestDto->getTitle(),
+            $requestDto->getText(),
+            $requestDto->getAuthorId()
+        );
 
         return $this->buildResponse($post, 201);
     }

@@ -3,9 +3,6 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Mime\Email;
-use Symfony\Component\Mime\Header\Headers;
-use Symfony\Component\Mime\Part\AbstractPart;
 
 /**
  *@ORM\Entity(repositoryClass="App\Repository\NotificationEmailRepository")
@@ -129,5 +126,10 @@ class NotificationEmail
         $this->text = $text;
 
         return $this;
+    }
+
+    public function isPerformed(): bool
+    {
+        return $this->getStatus() === self::NOTIFICATION_EMAIL_STATUS_PERFORMED;
     }
 }
