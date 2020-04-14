@@ -19,7 +19,7 @@ class PostService
     private const CACHE_EXPIRES_AFTER = 60;
 
     /** @var PostRepository  */
-    private $repository;
+    private $postRepository;
 
     /** @var RedisAdapter  */
     private $cache;
@@ -36,14 +36,14 @@ class PostService
     /** @var EventDispatcherInterface  */
     private $dispatcher;
 
-    public function __construct(PostRepository $repository,
+    public function __construct(PostRepository $postRepository,
                                 EntityManagerInterface $em,
                                 TagRepository $tagRepository,
                                 UserService $userService,
                                 EventDispatcherInterface $dispatcher
     )
     {
-        $this->repository     = $repository;
+        $this->postRepository     = $postRepository;
         $this->cache          = new RedisAdapter(new Client());
         $this->em             = $em;
         $this->tagRepository  = $tagRepository;
@@ -54,7 +54,6 @@ class PostService
     /**
      * @param array $params
      * @return array| Post[]
-     * @throws \Psr\Cache\InvalidArgumentException
      */
     public function getPosts(array $params): array
     {
@@ -65,7 +64,7 @@ class PostService
             ) = $params;
 
         if (!empty($tags)) {
-            return $this->repository->findPostsByTags($tags);
+            return $this->postRepository->findPostsByTags($tags);
         }
 
         $key = sprintf(
@@ -76,7 +75,7 @@ class PostService
 
         $posts = $this->cache->get($key, function (ItemInterface $item) use ($limit, $offset) {
             $item->expiresAfter(self::CACHE_EXPIRES_AFTER);
-            $posts = $this->repository->findPosts($limit, $offset);
+            $posts = $this->postRepository->findPosts($limit, $offset);
 
             return serialize($posts);
         });
@@ -86,7 +85,7 @@ class PostService
 
     public function getPost(int $id): ?Post
     {
-        return $this->repository->findOneBy(['id' => $id]);
+        return $this->postRepository->findOneBy(['id' => $id]);
 
     }
 

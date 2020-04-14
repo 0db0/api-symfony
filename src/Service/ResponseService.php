@@ -9,34 +9,20 @@ use App\Entity\User;
 
 class ResponseService
 {
-    /** @var PaginationService  */
-    private $pagination;
-
-    /** @var RequestService  */
+    /** @var RequestService */
     private $requestService;
 
-    public function __construct(PaginationService $pagination, RequestService $requestService)
+    public function __construct(RequestService $requestService)
     {
-
-        $this->pagination = $pagination;
         $this->requestService = $requestService;
     }
 
-//    /**
-//     * @param array  $data
-//     * @param int    $status HTTP response status code
-//     * @param string $type   Part of MIME-type used in header Content-Type
-//     * @return Response
-//     */
-//    public function createResponse(array $data, int $status, string $type): Response
-//    {
-//        $list = $this->pagination->paginate($data);
-//
-//        return new JsonResponse($list, $status, [
-//            'Content-Type' => 'application/'.$type,
-//        ]);
-//    }
-
+    /**
+     * @param array  $data
+     * @param int    $status HTTP response status code
+     * @param string $type   Part of MIME-type used in header Content-Type
+     * @return Response
+     */
     public function buildResponse($data, int $status, string $type = 'json'): Response
     {
         $response = [];
@@ -69,13 +55,7 @@ class ResponseService
         }
     }
 
-//    private function prepareResponseFromCollection(array $data): array
-//    {
-//        return $this->pagination->paginate($data);
-//
-//    }
-
-    private function prepareResponseFromCollection (array $collection): array
+    private function prepareResponseFromCollection(array $collection): array
     {
         $response = [
             "ok" => "true",
@@ -96,10 +76,10 @@ class ResponseService
         $response = [
             'ok' => 'true',
             'user' => [
-                'id'        => $user->getId(),
+                'id' => $user->getId(),
                 'firstName' => $user->getFirstName(),
-                'lastName'  => $user->getLastName(),
-                'email'     => $user->getEmail(),
+                'lastName' => $user->getLastName(),
+                'email' => $user->getEmail(),
             ],
             "_links" => [
                 'self' => [
@@ -162,36 +142,9 @@ class ResponseService
             'error' => [
                 'error_code' => 0,
                 'error_msg' => 'Item not found',
-//                'request_params' => $this->getRequestParameters($params),
             ],
         ];
 
         return $response;
     }
-
-//    private function getRequestParameters($params): array
-//    {
-//
-//        $requestParams = [];
-//        foreach ($params as $key => $value) {
-//            $requestParams[] = ['key' => $key, 'value' => $value];
-//        }
-//        return $requestParams;
-//    }
 }
-
-
-//
-//foreach ($blogList as $blog) {
-//    $response['blogList'][] = [
-//        'id' => $blog->getId(),
-//        'title' => $blog->getTitle(),
-//        'text' => $blog->getBlog(),
-//        'commentsCount' => count($blog->getComments()),
-//        'createdAt' => $this->getDate($blog),
-//        '_links' => [
-//            'self' => [
-//                'href' => '/api/blog/'.$blog->getId().'/'.$blog->getSlug(),
-//            ],
-//        ],
-//    ];
