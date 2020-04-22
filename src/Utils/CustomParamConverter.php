@@ -11,9 +11,8 @@ class CustomParamConverter implements ParamConverterInterface
 {
     public function apply(Request $request, ParamConverter $configuration)
     {
-        $reflectionController = new \ReflectionMethod($request->attributes->get('_controller'));
-
-        $parameters = $reflectionController->getParameters();
+        $reflectionAction = new \ReflectionMethod($request->attributes->get('_controller'));
+        $parameters = $reflectionAction->getParameters();
 
         foreach ($parameters as $parameter) {
             if (! $name = $configuration->getName()) {
@@ -28,11 +27,17 @@ class CustomParamConverter implements ParamConverterInterface
                     $reflectionClass = new \ReflectionClass($class);
                     $properties = $reflectionClass->getProperties();
 
-                    if ($arguments = $this->getArguments($properties, $request)) {
-                        $objectDto = $reflectionClass->newInstanceArgs($arguments);
+                    try {
+                        if ($arguments = $this->getArguments($properties, $request)) {
 
-                        $request->attributes->set($name, $objectDto);
+                            $objectDto = $reflectionClass->newInstanceArgs($arguments);
+                        }
+                    } catch (\InvalidArgumentException $exception) {
+                        echo $exception->getMessage();
+                        $objectDto = null;
                     }
+
+                    $request->attributes->set($name, $objectDto);
                 }
             }
         }
@@ -44,9 +49,12 @@ class CustomParamConverter implements ParamConverterInterface
         foreach ($properties as $property) {
             if ($argument = $request->request->get($property->getName())) {
                 $arguments[] = $argument;
+//            }
+            } else {
+                throw new \InvalidArgumentException(
+                    sprintf('Field %s missed', $property->getName()));
             }
         }
-
         return $arguments ?? null;
     }
 

@@ -29,6 +29,7 @@ class UserController extends BaseController
      */
     public function list()
     {
+
         $userList = $this->userService->createUsersList();
 
         return $this->buildResponse($userList, 200, 'hal+json');
@@ -50,6 +51,8 @@ class UserController extends BaseController
      */
     public function create(CreateUserDto $userDto)
     {
+        dd($userDto);
+
         $user = $this->userService->createNewUser($userDto);
 
         return $this->buildResponse($user, 201);
