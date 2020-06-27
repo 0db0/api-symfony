@@ -47,6 +47,7 @@ class PostController extends BaseController
      */
     public function list()
     {
+
         $params = $this->requestService->getParameters();
         $posts = $this->postService->getPosts($params);
 

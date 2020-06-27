@@ -2,7 +2,6 @@
 
 namespace App\Utils;
 
-use App\Dto\CreatePostDto;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Request\ParamConverter\ParamConverterInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -61,5 +60,6 @@ class CustomParamConverter implements ParamConverterInterface
     public function supports(ParamConverter $configuration)
     {
         return true;
+//        return false;
     }
 }

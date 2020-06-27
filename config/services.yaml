@@ -11,10 +11,7 @@ services:
         class: App\Utils\CustomParamConverter
         tags:
             - { name: request.param_converter, converter: 'custom_param_converter' }
-#
-#    App\EventListener\RequestListener:
-#        tags:
-#             - { name: kernel.event_listener, event: kernel.request, priority: 150 }
+
 
     # default configuration for services in *this* file
     _defaults:
@@ -36,6 +33,19 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
+    App\EventListener\ExceptionListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, priority: 254, method: onKernelException }
+
+    monolog.formatter.request_id:
+        class: Monolog\Formatter\LineFormatter
+        arguments:
+            - "[%%datetime%%] [%%extra.token%%] %%channel%%.%%level_name%%: %%message%% %%context%% %%extra%%\n"
+
+    App\Logger\RequestIdProcessor:
+        tags:
+            - { name: monolog.processor }
+            -
     ### Request & Response listeners ###
 #    Shared\ApiBundle\EventListener\RequestListener:
 #        tags:
