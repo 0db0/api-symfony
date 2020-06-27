@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 
 class UserService
 {
@@ -54,7 +55,13 @@ class UserService
 
     public function getUserById(int $id): User
     {
-        return $this->repository->findOneBy(['id' => $id]);
+        $user = $this->repository->findOneBy(['id' => $id]);
+
+        if (!$user) {
+            throw new ResourceNotFoundException('User not found. The id property '.$id.' is invalid');
+        }
+
+        return $user;
     }
 
     public function getUserByEmail(string $email): ?User

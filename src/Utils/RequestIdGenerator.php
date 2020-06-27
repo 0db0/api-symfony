@@ -6,9 +6,9 @@ class RequestIdGenerator
 {
     private static $requestId;
 
-    static public function generate(): string 
+    static public function generate(): string
     {
-        self::$requestId = random_bytes(8);
+        self::$requestId = 'request-id: ' . bin2hex(random_bytes(8));
 
         return self::$requestId;
     }

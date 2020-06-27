@@ -8,8 +8,13 @@ class AbstractConverter
     {
         $rf = new \ReflectionClass($this);
         $properties = $rf->getProperties();
-
         $array = [];
+//        array_map(function (\ReflectionProperty $property) use ($array) {
+//            $name = $property->getName();
+//            $methodName = sprintf('get%s', ucfirst($name));
+//            return ;
+//        }, $properties);
+
 
         foreach ($properties as $property) {
             $name = $property->getName();

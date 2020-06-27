@@ -2,7 +2,9 @@
 
 namespace App\Dto;
 
-class CreateUserDto
+use App\Utils\AbstractConverter;
+
+class CreateUserDto extends AbstractConverter
 {
     private $firstName;
 
@@ -11,6 +13,13 @@ class CreateUserDto
     private $email;
 
     private $password;
+
+    private $countOfPage;
+
+    public function getCountOfPage(): int
+    {
+        return $this->countOfPage;
+    }
 
     public function __construct(string $email, string $plainPassword, string $firstName, string $lastName)
     {
